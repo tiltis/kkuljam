@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>수면챙김 시제품</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#121427;padding:12px 0}
+.app{--txt:#ebe6dc;--dim:#aea8c4;--amber:#f2c46d;
+  max-width:420px;margin:0 auto;position:relative;overflow:hidden;border-radius:18px;background:#1b1a33;color:var(--txt);
+  font-family:'Pretendard',system-ui,sans-serif;font-size:15px;line-height:1.65;letter-spacing:-.01em;transition:background-color 1s linear}
+.stage{position:relative;margin:0 auto}
+.stage canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.hot{position:absolute;background:transparent;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.app button:focus-visible,.hot:focus-visible,.filelabel:focus-within,summary:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.tag{position:absolute;pointer-events:none;white-space:nowrap;font-family:'Galmuri11',sans-serif;font-size:11px;line-height:1;color:#fff1d2;
+  text-shadow:1px 0 #17142c,-1px 0 #17142c,0 1px #17142c,0 -1px #17142c,1px 1px #17142c}
+.tag.r{transform:translateX(-100%)}
+.talk{padding:18px 22px 26px;min-height:200px}
+.talk p{margin:0 0 6px}
+.head{font-family:'Galmuri14',sans-serif;font-size:14px;color:#fff3d8;margin-bottom:2px!important}
+.quiet{color:var(--dim);font-size:13px;line-height:1.6}
+.moods{display:flex;gap:26px;margin:10px 0 12px}
+.mood{background:none;border:0;padding:4px 2px;min-width:52px;color:var(--txt);font:inherit;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mood svg{width:42px;height:42px}
+.mood:hover svg{transform:translateY(-2px)}
+.words{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0 14px}
+.word{background:none;border:0;padding:6px 0;font:inherit;color:var(--dim);cursor:pointer}
+.word[aria-pressed="true"]{color:#221d36;background:var(--amber);padding:6px 9px}
+.link{background:none;border:0;padding:6px 0;font:inherit;font-size:14px;color:inherit;cursor:pointer;border-bottom:2px solid #5f5790}
+.link:hover{border-bottom-color:var(--amber)}
+.links{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:10px}
+.primary{display:block;width:100%;margin-top:16px;padding:12px 10px;border:0;cursor:pointer;font-family:'Galmuri14',sans-serif;font-size:14px;color:#221d36;background:var(--amber);
+  box-shadow:0 -3px 0 #221d36,0 3px 0 #221d36,-3px 0 0 #221d36,3px 0 0 #221d36,0 6px 0 #9c7a3c}
+.primary:active{transform:translateY(3px);box-shadow:0 -3px 0 #221d36,0 3px 0 #221d36,-3px 0 0 #221d36,3px 0 0 #221d36}
+@media (prefers-reduced-motion:reduce){.mood:hover svg,.spine:hover,.primary:active{transform:none}}
+@media (max-width:440px){body{padding:0}.app{border-radius:0}}
+.ov{position:absolute;inset:0;display:none;flex-direction:column;overflow:auto;z-index:5}
+.ov.on{display:flex}
+.ov:focus{outline:none}
+.ov canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+.ov .body{padding:18px 22px 26px}
+.ov .body p{margin:0 0 8px}
+.home{position:absolute;top:10px;left:14px;z-index:2;background:none;border:0;padding:8px 6px;font-family:'Galmuri11',sans-serif;font-size:12px;color:inherit;opacity:.85;cursor:pointer}
+#ovWeek{background:#141638}
+.days{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:'Galmuri11',sans-serif;font-size:11px;color:var(--dim)}
+#ovMemo{background:#25213f}
+#ovMemo .body{padding-top:60px}
+details{margin-top:16px}
+summary{cursor:pointer;list-style:none;display:inline-block;border-bottom:2px solid #5f5790;padding:4px 0;font-size:14px}
+summary::-webkit-details-marker{display:none}
+details[open] summary{border-bottom-color:var(--amber)}
+details .ev{margin-top:10px}
+#ovBooks{background:#262142}
+.spines{display:flex;justify-content:center;align-items:flex-end;gap:10px;padding:58px 16px 10px}
+.spine{border:0;cursor:pointer;width:52px;color:#221d36;font-family:'Galmuri11',sans-serif;font-size:13px;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:2px;padding:14px 0;
+  box-shadow:inset -4px 0 0 rgba(0,0,0,.18),inset 4px 0 0 rgba(255,255,255,.22)}
+.spine:hover{transform:translateY(-6px)}
+.spine[aria-pressed="true"]{transform:translateY(-12px)}
+.page{display:none;margin:8px 16px 0;padding:20px 20px 20px 30px;position:relative;background:#e4dfee;color:#221d36}
+.page.on{display:block}
+.page:before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--spine,#8fc1a9)}
+.night .page{background:#37304f;color:#ebe6dc}
+.page h3{margin:0 0 8px;font-weight:normal;font-family:'Galmuri14',sans-serif;font-size:14px}
+#ovSos{background:#0e0c1a;color:#e5d6c2}
+#ovSos .body{text-align:center}
+.opts{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:10px}
+.opts .link{color:#efd9bd;border-bottom-color:#6e523b;padding:8px 0}
+#ovSos .primary{background:#6e523b;color:#efd9bd;box-shadow:0 -3px 0 #24180f,0 3px 0 #24180f,-3px 0 0 #24180f,3px 0 0 #24180f,0 6px 0 #16100a}
+.worry{width:100%;max-width:300px;background:transparent;border:0;border-bottom:2px solid #6e523b;color:#efd9bd;font:inherit;padding:8px 2px;text-align:center}
+.worry:focus{outline:none;border-bottom-color:var(--amber)}
+#ovHelp{background:#15131d}
+#ovHelp a{color:#f2c46d}
+#ovData{background:#1b2140}
+.filelabel{display:block;margin-top:14px;cursor:pointer;text-align:center}
+.filelabel input{position:absolute;opacity:0;width:1px;height:1px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="stage" id="stage">
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div id="tags" aria-hidden="true"></div>
+    <button class="hot" id="hWindow" aria-label="창문: 이번 주 잠든 시각"></button>
+    <button class="hot" id="hMemo" aria-label="메모: 이번 주에 해 볼 것"></button>
+    <button class="hot" id="hShelf" aria-label="책 선반: 잠 안 올 때 쓰는 기술"></button>
+    <button class="hot" id="hLamp" aria-label="램프: 잠이 안 오거나 깼을 때"></button>
+    <button class="hot" id="hClock" aria-label="시계: 시간대 바꿔 보기, 시연용"></button>
+    <button class="hot" id="hPhone" aria-label="휴대폰: 수면 데이터 연결"></button>
+    <button class="hot" id="hBed" aria-label="침대: 어젯밤 기록"></button>
+  </div>
+  <div class="talk" id="talk" aria-live="polite"></div>
+
+  <section class="ov" id="ovWeek" aria-label="이번 주 잠든 시각">
+    <button class="home" data-close>방으로</button>
+    <canvas id="weekCv" aria-hidden="true"></canvas>
+    <div class="days" id="weekDays"></div>
+    <div class="body" id="weekText"></div>
+  </section>
+  <section class="ov" id="ovMemo" aria-label="이번 주에 해 볼 것">
+    <button class="home" data-close>방으로</button>
+    <div class="body" id="memoBody"></div>
+  </section>
+  <section class="ov" id="ovBooks" aria-label="기술 책">
+    <button class="home" data-close>방으로</button>
+    <div class="spines" id="spines"></div>
+    <div class="page" id="page"></div>
+    <div class="body"><p class="quiet" id="booksHint">책을 하나 꺼내 봐.</p></div>
+  </section>
+  <section class="ov" id="ovSos" aria-label="잠 안 올 때">
+    <button class="home" data-close style="color:#9b8a7a">방으로</button>
+    <canvas id="glowCv" aria-hidden="true"></canvas>
+    <div class="body" id="sosBody"></div>
+  </section>
+  <section class="ov" id="ovHelp" aria-label="도움 연결">
+    <div class="body" style="padding-top:56px">
+      <p>지금 많이 힘드시군요.</p>
+      <p>혼자 버티지 않으셔도 됩니다. 지금 바로 이야기할 수 있는 곳이 있어요.</p>
+      <p style="margin-top:22px"><a href="tel:109">자살예방상담전화 109</a><br><span class="quiet">24시간 연결돼요</span></p>
+      <p><a href="tel:15770199">정신건강위기상담전화 1577-0199</a></p>
+      <p style="margin-top:22px">위험이 급하면 112나 119로 전화해 주세요.</p>
+      <button class="link" data-close style="margin-top:18px">방으로 돌아가기</button>
+    </div>
+  </section>
+  <section class="ov" id="ovData" aria-label="수면 데이터 연결">
+    <button class="home" data-close>방으로</button>
+    <div class="body" style="padding-top:56px">
+      <p>수면 기록은 직접 적지 않아도 돼. 시계가 잰 걸 가져와.</p>
+      <p class="quiet" id="dataState"></p>
+      <label class="filelabel primary" tabindex="0">삼성 헬스 파일 불러오기<input type="file" id="csvIn" accept=".csv,text/csv"></label>
+      <p class="quiet" style="margin-top:10px">삼성 헬스 앱 설정에서 개인 데이터를 내려받고, 이름에 sleep이 들어간 CSV를 고르면 돼. 앱 버전에서는 헬스 커넥트로 자동 연결할 예정이야.</p>
+      <div class="links"><button class="link" id="useDemo">예시 데이터로 보기</button><button class="link" id="guideToggle"></button><button class="link" id="wipe">내 기록 지우기</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+var W=120,H=150;
+var cv=document.getElementById('scene'),ctx=cv.getContext('2d');cv.width=W;cv.height=H;
+var base=document.createElement('canvas');base.width=W;base.height=H;var b=base.getContext('2d');
+var litA=document.createElement('canvas'),litB=document.createElement('canvas');litA.width=litB.width=W;litA.height=litB.height=H;
+var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+var qs=new URLSearchParams(location.search);
+var app=document.getElementById('app'),talk=document.getElementById('talk'),stage=document.getElementById('stage');
+
+/* integer scaling only */
+function fit(){var s=Math.max(2,Math.floor(app.clientWidth/W));stage.style.width=(W*s)+'px';stage.style.height=(H*s)+'px'}
+fit();window.addEventListener('resize',fit);
+
+/* ================= storage ================= */
+var KEY='sumyeon.proto.v4';
+var store={records:{},worry:null,nights:null,source:'demo',guide:true,exp:null,sosWorry:[]};
+var canSave=true;
+try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&typeof o==='object'){
+  if(o.records&&typeof o.records==='object'&&!Array.isArray(o.records))store.records=o.records;
+  if(o.worry&&typeof o.worry.text==='string')store.worry=o.worry;
+  if(Array.isArray(o.nights))store.nights=o.nights.filter(function(n){return n&&typeof n.date==='string'&&typeof n.onset==='number'});
+  if(o.source==='file'||o.source==='demo')store.source=o.source;
+  if(typeof o.guide==='boolean')store.guide=o.guide;
+  if(o.exp&&typeof o.exp.id==='string')store.exp=o.exp;
+  if(Array.isArray(o.sosWorry))store.sosWorry=o.sosWorry.filter(function(s){return typeof s==='string'});
+}}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));canSave=true}catch(e){canSave=false}return canSave}
+
+/* ================= dates ================= */
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function today0(){var d=new Date();d.setHours(0,0,0,0);return d}
+function todayKey(){return ymd(new Date())}
+function addDays(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x}
+function daysBetween(a,c){return Math.round((new Date(c+'T00:00:00')-new Date(a+'T00:00:00'))/864e5)}
+function fmt(m){m=((Math.round(m)%1440)+1440)%1440;var h=Math.floor(m/60),mm=m%60;return (h%12||12)+':'+('0'+mm).slice(-2)+' '+(h<12?'AM':'PM')}
+function dur(m){m=Math.round(m);var h=Math.floor(m/60),mm=m%60;return (h?h+'시간':'')+(h&&mm?' ':'')+(mm||!h?mm+'분':'')}
+function md(key){var p=key.split('-');return (+p[1])+'월 '+(+p[2])+'일'}
+var WD=['일','월','화','수','목','금','토'];
+function ro(w){var c=w.charCodeAt(w.length-1)-0xAC00;if(c<0||c>11171)return w+'(으)로';var j=c%28;return w+(j===0||j===8?'로':'으로')}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+/* ================= sleep data ================= */
+function demoNights(){
+  var on=[-40,30,160,null,70,-10,155],wk=[450,490,650,null,520,470,616],aw=[35,20,30,null,40,25,53],out=[],t=today0();
+  for(var i=0;i<7;i++){if(on[i]!=null)out.push({date:ymd(addDays(t,i-6)),onset:on[i],wake:wk[i],awake:aw[i]})}
+  return out;
+}
+function nights(){return store.source==='file'&&store.nights&&store.nights.length?store.nights:demoNights()}
+function nightOf(key){var n=nights();for(var i=0;i<n.length;i++)if(n[i].date===key)return n[i];return null}
+function lastDays(endKey,count){var out=[],end=new Date(endKey+'T00:00:00');for(var d=count-1;d>=0;d--){var k=ymd(addDays(end,-d));out.push({key:k,n:nightOf(k)})}return out}
+function median(a){var s=a.slice().sort(function(x,y){return x-y}),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
+function avg(a){return a.reduce(function(x,y){return x+y},0)/a.length}
+function metrics(list){
+  var v=list.filter(function(n){return n&&n.onset!=null});var m={n:v.length};if(v.length<5)return m;
+  var on=v.map(function(n){return n.onset}),wk=v.map(function(n){return n.wake}),aw=v.filter(function(n){return n.awake!=null}).map(function(n){return n.awake});
+  var med=median(on);
+  m.onMin=Math.min.apply(null,on);m.onMax=Math.max.apply(null,on);m.onsetRange=m.onMax-m.onMin;
+  m.wakeMin=Math.min.apply(null,wk);m.wakeMax=Math.max.apply(null,wk);m.wakeRange=m.wakeMax-m.wakeMin;
+  m.waso=aw.length?avg(aw):null;m.late=on.filter(function(x){return x-med>=60}).length;return m;
+}
+function others(){var last=todayKey();return nights().filter(function(x){return x.date!==last})}
+function tiredFlag(){var last=nightOf(todayKey());if(!last)return false;var v=others().map(function(x){return x.onset});return v.length>=5&&last.onset-median(v)>=60}
+function lastNightHtml(){
+  var n=nightOf(todayKey());
+  if(!n){var all=nights();
+    if(store.source==='file'&&all.length)return '<p class="quiet">불러온 파일엔 어젯밤 기록이 없어. 마지막 기록은 '+md(all[all.length-1].date)+'이야.</p>';
+    return '<p class="quiet">어젯밤 기록은 시계에 안 남았어.</p>'}
+  var slept=n.wake-n.onset-(n.awake||0),v=others().map(function(x){return x.onset}),cmp='';
+  if(v.length>=5){var d=n.onset-median(v);if(d>=30)cmp=' 평소보다 '+dur(d)+' 늦게 잠들었어.';else if(d<=-30)cmp=' 평소보다 '+dur(-d)+' 일찍 잠들었어.'}
+  return '<p class="head">어젯밤 '+dur(slept)+'</p><p class="quiet">'+fmt(n.onset)+'에 자서 '+fmt(n.wake)+'에 깼어.'+cmp+'</p>';
+}
+
+/* ================= evidence-based weekly experiment ================= */
+function context(){var since=ymd(addDays(today0(),-7)),anx=0;for(var k in store.records){if(k>=since&&store.records[k].emotion==='불안')anx++}
+  return {sosWorry:store.sosWorry.filter(function(d){return d>=since}).length,anxious:anx}}
+var RULES=[
+  {id:'wake',metric:'wakeRange',label:'일어난 시각 차이',fmtv:dur,test:function(m){return m.wakeRange>=90},
+   title:'주말에도 같은 시각에 일어나기',how:'일어날 시각을 하나 정해. 늦게 잔 날에도 그 시각엔 일어나 보는 거야.',
+   data:function(m){return '지난 '+m.n+'밤 동안 일어난 시각이 '+fmt(m.wakeMin)+'부터 '+fmt(m.wakeMax)+'까지 '+dur(m.wakeRange)+' 벌어졌어.'},
+   why:'일어나는 시각을 먼저 고정하는 건 불면 행동치료(CBT-I)의 기본 단계야. 대학생 61명을 30일 동안 본 연구에선 잠자는 시간이 들쭉날쭉할수록 학점이 낮은 경향이 있었어. 관련이 있다는 거지, 원인이라는 뜻은 아니야.',
+   refs:['Edinger 외 (2021) J Clin Sleep Med 17(2):255~262','Phillips 외 (2017) Sci Rep 7:3216','National Sleep Foundation 합의문 (2023) Sleep Health 9(6)']},
+  {id:'awake',metric:'waso',label:'밤중에 깬 시간',fmtv:function(v){return Math.round(v)+'분'},test:function(m,c){return (m.waso!=null&&m.waso>=30)||c.sosWorry>=2},
+   title:'꽤 오래 말똥하면 잠깐 일어나기',how:'시계는 보지 마. 한참 지났다 싶으면 침대에서 나와 어둑한 데서 쉬다가, 졸릴 때 다시 누워.',
+   data:function(m){return '지난 '+m.n+'밤 동안 밤중에 평균 '+Math.round(m.waso)+'분 깨 있었어.'},
+   why:'침대를 "잠 안 와서 괴로운 곳"이 아니라 "자는 곳"으로 다시 묶는 방법이야(자극 조절). 미국수면의학회 지침이 권하는 방법 가운데 하나고, 보통 20분 정도를 기준으로 안내해.',
+   refs:['Edinger 외 (2021) J Clin Sleep Med 17(2):255~262']},
+  {id:'late',metric:'late',label:'평소보다 1시간 넘게 늦게 잔 밤',fmtv:function(v){return v+'밤'},test:function(m){return m.late>=3},
+   title:'노는 시간을 30분 앞으로',how:'하루 중 나를 위한 시간을 저녁으로 30분 당기고, 폰은 침대 밖에서 충전해.',
+   data:function(m){return '지난 '+m.n+'밤 중 '+m.late+'밤은 평소보다 1시간 넘게 늦게 잤어.'},
+   why:'딱히 할 일이 없는데도 자는 걸 미루는 걸 "취침 미루기"라고 불러. 177명을 조사한 연구에서 취침 미루기가 수면 부족과 이어져 있었어.',
+   refs:['Kroese 외 (2014) Front Psychol 5:611','Chung·An·Suh (2020) Sleep 43(4)']},
+  {id:'list',metric:'worry',label:'"생각이 너무 많아"를 고른 밤',fmtv:function(v){return v+'밤'},test:function(m,c){return c.sosWorry>=2||c.anxious>=3},
+   title:'자기 전 5분, 내일 할 일 적기',how:'내일 할 일을 생각나는 대로 적고 덮어. 적은 건 내일의 몫이야.',
+   data:function(m,c){return '지난 7일 동안 밤에 "생각이 너무 많아"를 '+c.sosWorry+'번 골랐어.'},
+   why:'자기 전에 할 일 목록을 5분 쓴 사람들이, 끝낸 일을 쓴 사람들보다 빨리 잠들었다는 실험이 있어(평균 약 16분 대 25분, 57명, 수면다원검사).',
+   refs:['Scullin 외 (2018) J Exp Psychol Gen 147(1):139~146']}
+];
+function ruleById(id){for(var i=0;i<RULES.length;i++)if(RULES[i].id===id)return RULES[i];return null}
+function candidates(){var m=metrics(lastDays(todayKey(),7).map(function(x){return x.n})),c=context();if(m.n<5)return {m:m,list:[]};return {m:m,c:c,list:RULES.filter(function(r){return r.test(m,c)})}}
+var memoIdx=0;
+
+/* ================= palette & light ================= */
+var P={
+  wall:['#2f2b52','#463f6e','#5d5689','#746da0','#8f89b8'],
+  side:['#28254a','#3a3561','#4c4678','#5f598c','#746ea2'],
+  floor:['#33262e','#4d3640','#6a4b50','#866461','#a37f74'],
+  wood:['#33202f','#4f2f3e','#6e464d','#8f625f','#b08174'],
+  teal:['#1b3440','#29525d','#3a7476','#559a8f','#7fbcab'],
+  linen:['#545073','#827d9f','#aea8c8','#d0cbe2','#ece8f5'],
+  mauve:['#32223d','#4c3356','#6b4b74','#8a6b94','#ae8fb6'],
+  shade:['#73452a','#ad6c3c','#d69b4d','#ecc47f','#f8e4b6'],
+  leaf:['#1c372f','#2a5540','#41774f','#629b60','#8dbf7d'],
+  cream:['#5f4762','#b7999a','#ddc6b2','#eedfcc','#f8f0e2'],
+  cap:['#28225a','#41388f','#5d52c2','#8177dd','#a9a0ef']
+};
+var ORDER=['morning','day','evening','night'];
+function autoTod(){var h=new Date().getHours();if(h>=5&&h<10)return 'morning';if(h>=10&&h<17)return 'day';if(h>=17&&h<23)return 'evening';return 'night'}
+var demoTod=ORDER.indexOf(qs.get('t'))>=0?qs.get('t'):null;
+var tod=demoTod||autoTod();
+var LIGHT={
+  morning:{amb:[1,0.93,0.9],lamp:0,win:[1,0.84,0.6],winS:.4,app:'#332d4c'},
+  day:{amb:[1.04,1.04,1.04],lamp:0,win:[1,0.98,0.9],winS:.22,app:'#3a3456'},
+  evening:{amb:[0.62,0.52,0.72],lamp:.6,win:[1,0.6,0.5],winS:.16,app:'#2a2544'},
+  night:{amb:[0.34,0.35,0.58],lamp:1,win:[0.42,0.52,0.9],winS:.18,app:'#191830'}
+};
+var LAMP={x:80,y:80,r:58,col:[1,0.74,0.4]};
+var BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function bay(x,y){return BAYER[(y&3)*4+(x&3)]/16}
+function q(v,steps){return Math.max(0,Math.min(1,Math.floor(v*steps+0.5)/steps))} /* flat bands, no dither on objects */
+function inShaft(x,y){if(y<91)return 0;var t=y-91,x0=24+t*0.42,x1=58+t*0.78;if(x<x0||x>x1)return 0;return Math.min(1,Math.min(x-x0,x1-x)/2.5)}
+function lightAt(x,y,L){
+  var r=L.amb[0],g=L.amb[1],bl=L.amb[2];
+  if(L.lamp>0){var d=Math.sqrt((x-LAMP.x)*(x-LAMP.x)+(y-LAMP.y)*(y-LAMP.y)*1.3)/LAMP.r;if(d<1){var k=q(Math.pow(1-d,1.4),3)*0.75*L.lamp;r+=LAMP.col[0]*k;g+=LAMP.col[1]*k;bl+=LAMP.col[2]*k}}
+  if(L.winS>0){var s=inShaft(x,y);if(s>=0.5){var w=L.winS;r+=L.win[0]*w;g+=L.win[1]*w;bl+=L.win[2]*w}}
+  return [r,g,bl];
+}
+
+/* ================= drawing helpers ================= */
+function R(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(x,y,w,h)}
+function px(c,x,y,col){c.fillStyle=col;c.fillRect(x,y,1,1)}
+function hash(x,y){var h=(x*374761393+y*668265263)|0;h=(h^(h>>>13))*1274126177|0;return ((h^(h>>>16))>>>0)/4294967296}
+function trap(c,y0,y1,xl0,xr0,xl1,xr1,colFn){for(var y=y0;y<=y1;y++){var t=(y1===y0)?0:(y-y0)/(y1-y0),xl=Math.round(xl0+(xl1-xl0)*t),xr=Math.round(xr0+(xr1-xr0)*t);for(var x=xl;x<=xr;x++)px(c,x,y,colFn(x,y,xl,xr))}}
+function lineTo(c,x0,y0,x1,y1,col,dotted){var dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy,n=0;c.fillStyle=col;
+  for(;;){if(!dotted||(n++%2===0))c.fillRect(x0,y0,1,1);if(x0===x1&&y0===y1)break;var e2=2*err;if(e2>=dy){err+=dy;x0+=sx}if(e2<=dx){err+=dx;y0+=sy}}}
+function hexRgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function recordCount(){var n=0;for(var k in store.records)if(store.records[k]&&store.records[k].mood)n++;return n}
+
+/* ================= room (unlit albedo), one-point perspective ================= */
+var BX0=14,BX1=105,BY=90,VPX=60,VPY=34;
+function drawBase(){
+  var c=b;
+  /* floor */
+  R(c,0,BY,W,H-BY,P.floor[2]);
+  [96,103,112,123,137].forEach(function(y,i){R(c,0,y,W,1,P.floor[1]);R(c,0,y+1,W,1,P.floor[3])});
+  for(var x=BX0;x<=BX1;x+=9){var xb=Math.round(VPX+(x-VPX)*(H-VPY)/(BY-VPY));lineTo(c,x,BY,xb,H-1,P.floor[1])}
+  for(var i=0;i<40;i++){var gx=Math.floor(hash(i,7)*W),gy=BY+3+Math.floor(hash(7,i)*(H-BY-4));R(c,gx,gy,2,1,hash(gx,gy)>.5?P.floor[3]:P.floor[1])}
+  /* back wall */
+  R(c,BX0,0,BX1-BX0+1,BY,P.wall[2]);
+  for(var sx=BX0+4;sx<BX1;sx+=8)R(c,sx,0,1,BY,P.wall[1]);
+  for(var dy=6;dy<BY-14;dy+=10)for(var dx=BX0+8;dx<BX1;dx+=8)px(c,dx,dy+((dx/8)%2?5:0),P.wall[3]);
+  R(c,BX0,BY-14,BX1-BX0+1,1,P.wood[3]);R(c,BX0,BY-13,BX1-BX0+1,1,P.wood[1]);
+  R(c,BX0,BY-3,BX1-BX0+1,3,P.wood[2]);R(c,BX0,BY-3,BX1-BX0+1,1,P.wood[3]);
+  /* side walls */
+  for(var y=0;y<H;y++)for(var x2=0;x2<BX0;x2++){var lim=BY+(BX0-x2)*(H-BY)/BX0;if(y<lim)px(c,x2,y,(x2%5===2)?P.side[1]:P.side[2])}
+  for(var y2=0;y2<H;y2++)for(var x3=BX1+1;x3<W;x3++){var lim2=BY+(x3-BX1)*(H-BY)/(W-1-BX1);if(y2<lim2)px(c,x3,y2,(x3%5===2)?P.side[1]:P.side[2])}
+  R(c,BX0,0,1,BY,P.wall[0]);R(c,BX1,0,1,BY,P.wall[0]);
+  lineTo(c,BX0,BY,0,H-1,P.wood[1]);lineTo(c,BX1,BY,W-1,H-1,P.wood[1]);
+  /* window + curtains */
+  R(c,22,12,40,42,P.linen[3]);R(c,22,12,40,1,P.linen[4]);R(c,22,53,40,1,P.linen[1]);
+  R(c,25,15,34,36,'#000');
+  R(c,41,15,2,36,P.linen[3]);R(c,43,15,1,36,P.linen[1]);
+  R(c,19,54,46,3,P.linen[3]);R(c,19,54,46,1,P.linen[4]);R(c,19,56,46,1,P.linen[1]);
+  R(c,15,8,54,2,P.wood[1]);R(c,15,7,2,4,P.wood[3]);R(c,67,7,2,4,P.wood[3]);
+  curtain(c,16,10,9,52,false);curtain(c,59,10,9,52,true);
+  /* memo pinned */
+  R(c,70,34,8,9,'#e5d27a');R(c,70,34,8,1,'#f4e6a3');R(c,71,42,7,1,'#b39b55');R(c,71,37,5,1,'#b39b55');R(c,71,39,6,1,'#b39b55');px(c,73,34,'#c0485a');px(c,74,34,'#de6878');
+  /* music sheet frame: one note per mood record (no text anywhere) */
+  R(c,80,10,22,14,P.wood[1]);R(c,81,11,20,12,P.linen[4]);
+  for(var l=0;l<3;l++)R(c,82,14+l*3,18,1,P.linen[1]);
+  var n=Math.min(14,recordCount());for(var k=0;k<n;k++){var nx=83+(k%7)*2+(k>=7?1:0),ny=(k>=7?18:12)+(k%3);px(c,nx,ny,'#372c58');px(c,nx,ny+1,'#372c58')}
+  /* wall shelf with books */
+  R(c,78,50,26,2,P.wood[3]);R(c,78,50,26,1,P.wood[4]);R(c,78,52,26,1,P.wood[0]);R(c,80,53,2,3,P.wood[1]);R(c,100,53,2,3,P.wood[1]);
+  var cols=['#8bbfa6','#7cb2dc','#e3a0b4','#efbf69','#a998d4'];
+  var bks=[[0,3,11],[0,2,9],[1,3,12],[2,3,10],[3,2,12],[4,3,9]],bx=80;
+  bks.forEach(function(bk){var col=cols[bk[0]],h=bk[2],w=bk[1];R(c,bx,50-h,w,h,col);R(c,bx,50-h,1,h,'rgba(255,255,255,.3)');R(c,bx+w-1,50-h,1,h,'rgba(0,0,0,.25)');R(c,bx,50-h+2,w,1,'rgba(255,255,255,.28)');bx+=w});
+  R(c,bx+1,44,3,6,cols[1]);R(c,bx+4,45,3,5,cols[2]);           /* leaning */
+  R(c,96,44,6,6,'#a2624d');R(c,96,44,6,1,'#c4826a');R(c,97,49,4,1,'#7a4436');  /* pot */
+  plant(c,99,43,Math.min(8,2+recordCount()));
+  /* bed: headboard, mattress top (perspective), blanket, front */
+  R(c,16,62,50,29,P.wood[2]);R(c,16,62,50,2,P.wood[4]);R(c,16,64,50,1,P.wood[3]);R(c,16,62,1,29,P.wood[3]);R(c,65,62,1,29,P.wood[1]);
+  R(c,20,67,42,18,P.wood[1]);R(c,21,68,40,16,P.wood[3]);R(c,21,68,40,1,P.wood[4]);
+  trap(c,90,116,16,65,10,71,function(x,y,xl,xr){return x===xl?P.linen[2]:x===xr?P.linen[1]:P.linen[3]});
+  R(c,24,84,34,11,P.linen[3]);R(c,25,84,32,1,P.linen[4]);R(c,24,85,1,9,P.linen[2]);R(c,57,85,1,9,P.linen[1]);R(c,24,94,34,1,P.linen[1]);R(c,27,86,8,2,P.linen[4]);
+  blanket(c);
+  R(c,12,126,3,5,P.wood[1]);R(c,67,126,3,5,P.wood[1]);
+  R(c,9,129,64,3,'rgba(16,8,18,.4)');
+  /* nightstand */
+  R(c,72,94,22,4,P.wood[4]);R(c,72,97,22,1,P.wood[3]);R(c,73,98,20,17,P.wood[2]);R(c,73,98,1,17,P.wood[3]);R(c,92,98,1,17,P.wood[1]);
+  R(c,73,106,20,1,P.wood[1]);R(c,82,101,2,1,P.linen[4]);R(c,82,110,2,1,P.linen[4]);R(c,74,115,2,4,P.wood[1]);R(c,90,115,2,4,P.wood[1]);
+  R(c,72,118,23,2,'rgba(16,8,18,.4)');
+  /* lamp */
+  R(c,78,86,4,8,P.wood[0]);R(c,76,92,8,2,P.wood[1]);
+  lampShade(c,false);
+  /* alarm clock (time-of-day demo) */
+  R(c,86,88,7,6,'#c9606e');R(c,87,89,5,4,P.linen[4]);px(c,86,87,'#c9606e');px(c,92,87,'#c9606e');R(c,87,94,1,1,P.wood[0]);R(c,91,94,1,1,P.wood[0]);
+  /* rug */
+  for(var ry=-8;ry<=8;ry++)for(var rx=-32;rx<=32;rx++){var e=(rx*rx)/(32*32)+(ry*ry)/64;if(e<=1){var col2=e>.84?P.mauve[1]:e>.62?P.mauve[3]:(((rx+ry*3)%9===0)||((rx-ry*3)%9===0))?P.mauve[4]:P.mauve[2];px(c,62+rx,139+ry,col2)}}
+  /* slippers */
+  R(c,30,132,6,3,'#d38a9c');R(c,30,132,6,1,'#eeb1bf');R(c,37,133,6,3,'#d38a9c');R(c,37,133,6,1,'#eeb1bf');
+  /* phone charging on floor */
+  R(c,99,138,10,5,'#231e3c');R(c,100,139,8,3,'#36488a');px(c,101,139,'#6b82c6');R(c,109,140,6,1,'#231e3c');lineTo(c,114,140,118,132,'#231e3c');
+}
+function curtain(c,x,y,w,h,right){
+  var tones=[2,3,4,3,2,1,2,3,2];for(var i=0;i<w;i++)R(c,x+i,y,1,h,P.mauve[tones[i%tones.length]]);
+  R(c,x,y,w,1,P.mauve[1]);R(c,x,y+24,w,2,P.mauve[1]);R(c,x,y+23,w,1,P.mauve[4]);
+  for(var j=0;j<3;j++)R(c,right?x+w-3+j:x,y+h-1-j,3-j,1,P.mauve[1]);
+}
+function plant(c,x,y,leaves){
+  R(c,x,y-6,1,7,P.leaf[1]);
+  var L=[[-2,-5],[1,-7],[-3,-2],[2,-3],[-1,-9],[3,-6],[-4,-6],[2,-10]];
+  for(var i=0;i<leaves&&i<L.length;i++){var lx=x+L[i][0],ly=y+L[i][1];R(c,lx,ly,3,2,P.leaf[2+(i%3)]);px(c,lx,ly+1,P.leaf[1])}
+}
+function blanket(c){
+  trap(c,99,116,14,66,10,71,function(x,y,xl,xr){var t=y<=101?4:(y<=102?3:2);var fold=((x+Math.floor((y-99)/2))%11===0)?1:0;return x===xl||x===xr?P.teal[1]:fold?P.teal[1]:P.teal[t]});
+  for(var gy=105;gy<116;gy+=5)for(var gx=18;gx<68;gx+=7)px(c,gx+(gy%10?3:0),gy,P.teal[3]);
+  R(c,10,117,62,9,P.teal[2]);R(c,10,117,62,1,P.teal[3]);R(c,10,125,62,1,P.teal[0]);R(c,10,117,1,9,P.teal[1]);R(c,71,117,1,9,P.teal[1]);
+  for(var f=0;f<6;f++)R(c,16+f*10,118,1,7,P.teal[1]);
+}
+function lampShade(c,lit){
+  var r=lit?['#c78543','#efb45d','#ffd788','#ffe9b0','#fff6dc']:P.shade;
+  R(c,75,74,10,2,r[3]);R(c,74,76,12,3,r[2]);R(c,73,79,14,5,r[2]);R(c,73,84,14,2,r[1]);R(c,74,76,2,8,r[4]);R(c,73,86,14,1,r[0]);
+}
+
+/* ================= character (procedural, bigger) ================= */
+function charPixels(face){
+  var out=[],cx=12.5,cy=15.6,rx=11.2,ry=8.4;
+  function inBody(x,y){var a=(x+.5-cx)/rx,bb=(y+.5-cy)/ry;return a*a+bb*bb<=1}
+  function inCap(x,y){var a=(x+.5-cx)/10.6,bb=(y+.5-9.8)/7.2;if(a*a+bb*bb<=1&&y<=11)return true;if(y>=3&&y<=8&&x>=18&&x<=18+Math.round((8-y)*1.3))return true;return false}
+  function inPom(x,y){var a=x+.5-23.2,bb=y+.5-9.2;return a*a+bb*bb<=4.2}
+  function inside(x,y){return inBody(x,y)||inCap(x,y)||inPom(x,y)}
+  for(var y=0;y<26;y++)for(var x=0;x<27;x++){
+    if(!inside(x,y))continue;
+    var edge=!inside(x-1,y)||!inside(x+1,y)||!inside(x,y-1)||!inside(x,y+1),col;
+    if(inPom(x,y)&&!inCap(x,y))col=edge?P.cream[1]:(x+y<31?P.cream[4]:P.cream[3]);
+    else if(inCap(x,y)){var sc=-((x+.5-cx)/10.6)*.6-((y+.5-8)/7)*.7;col=edge?P.cap[0]:(y>=10?P.cap[1]:sc>.5?P.cap[4]:sc>.05?P.cap[3]:P.cap[2])}
+    else{var s=-((x+.5-cx)/rx)*.5-((y+.5-cy)/ry)*.75;col=edge?P.cream[0]:(s>.6?P.cream[4]:s>.05?P.cream[3]:s>-.55?P.cream[2]:P.cream[1])}
+    out.push([x,y,col]);
+  }
+  var E='#261f3c',HL='#fff4e4',set=function(x,y,c){out.push([x,y,c])};
+  if(face==='blink'){[8,9,15,16].forEach(function(x){set(x,16,E)})}
+  else{set(8,14,E);set(9,14,HL);set(8,15,E);set(9,15,E);set(8,16,E);set(9,16,E);set(15,14,E);set(16,14,HL);set(15,15,E);set(16,15,E);set(15,16,E);set(16,16,E)}
+  [5,6,18,19].forEach(function(x){set(x,18,'#e9939f')});
+  if(face==='tired'){[8,9,15,16].forEach(function(x){set(x,17,'#9180c2')})}
+  if(face==='happy'){set(11,18,'#9c4a5f');set(12,19,'#9c4a5f');set(13,19,'#9c4a5f');set(14,18,'#9c4a5f')}
+  else{set(12,19,'#9c4a5f');set(13,19,'#9c4a5f')}
+  return out;
+}
+var lightCache={},happyUntil=0,noteUntil=0,lampPulse=false;
+var CHX=28,CHY=72;
+function drawChar(now,L){
+  var face=happyUntil>now?'happy':(tod!=='night'&&tiredFlag()?'tired':'open');
+  if(!reduce&&face!=='happy'&&Math.floor(now/120)%38===0)face='blink';
+  var bob=(!reduce&&Math.floor(now/1100)%2===0)?0:1,pts=charPixels(face);
+  for(var i=0;i<pts.length;i++){var p=pts[i],X=CHX+p[0],Y=CHY+p[1]+bob;if(Y>=99)continue;var lk=X+','+Y,l=lightCache[lk];if(!l){l=lightAt(X,Y,LIGHT[tod]);lightCache[lk]=l}
+    var c=hexRgb(p[2]);ctx.fillStyle='rgb('+Math.min(255,c[0]*l[0])+','+Math.min(255,c[1]*l[1])+','+Math.min(255,c[2]*l[2])+')';ctx.fillRect(X,Y,1,1)}
+  if(noteUntil>now){var k=1-(noteUntil-now)/1600,ny=Math.round(66-k*20);noteAt(52,ny,'#ffe08a');if(k>.3)noteAt(58,ny+7,'#bfe0ff')}
+}
+function noteAt(x,y,c){ctx.fillStyle=c;ctx.fillRect(x+2,y,3,1);ctx.fillRect(x+2,y,1,5);ctx.fillRect(x+4,y,1,2);ctx.fillRect(x,y+4,3,2)}
+
+/* ================= light bake ================= */
+var SKY={morning:['#f3c0a6','#b7c8ec'],day:['#9cceef','#dbecf7'],evening:['#e8946e','#5a4a8a'],night:['#0f1134','#23285a']};
+var CITY={morning:'#8d93bf',day:'#97a9c8',evening:'#4a3a6e',night:'#161838'};
+var STARS=[[28,18],[33,24],[47,17],[54,22],[30,30],[51,31],[38,20]];
+var BUILD=[[25,38,5],[30,41,4],[34,35,4],[38,43,3],[44,40,5],[49,36,4],[53,42,6]];
+function bake(target,name){
+  var L=LIGHT[name],c2=target.getContext('2d'),img=b.getImageData(0,0,W,H),d=img.data;
+  for(var y=0;y<H;y++)for(var x=0;x<W;x++){var i=(y*W+x)*4,l=lightAt(x,y,L);d[i]=Math.min(255,d[i]*l[0]);d[i+1]=Math.min(255,d[i+1]*l[1]);d[i+2]=Math.min(255,d[i+2]*l[2])}
+  c2.putImageData(img,0,0);
+  var s=SKY[name],a=hexRgb(s[0]),bb=hexRgb(s[1]);
+  for(var yy=0;yy<36;yy++){var t=yy/35;c2.fillStyle='rgb('+Math.round(a[0]+(bb[0]-a[0])*t)+','+Math.round(a[1]+(bb[1]-a[1])*t)+','+Math.round(a[2]+(bb[2]-a[2])*t)+')';c2.fillRect(25,15+yy,16,1);c2.fillRect(44,15+yy,15,1)}
+  c2.fillStyle=CITY[name];BUILD.forEach(function(bd){c2.fillRect(bd[0],bd[1],bd[2],51-bd[1])});
+  if(name==='night'||name==='evening'){c2.fillStyle='#f6d88a';[[26,41],[31,44],[35,38],[45,43],[50,39],[54,45],[55,47]].forEach(function(w){c2.fillRect(w[0],w[1],1,1)})}
+  if(name==='night'||name==='evening'){c2.fillStyle='#ffe6a0';c2.fillRect(51,19,3,1);c2.fillRect(50,20,2,4);c2.fillRect(51,24,3,1)}
+  else{c2.fillStyle='#ffe08a';c2.fillRect(29,20,4,4);c2.fillRect(30,19,2,6);c2.fillRect(28,21,6,2)}
+  c2.fillStyle='rgba(0,0,0,.2)';c2.fillRect(41,15,3,36);
+  if(L.lamp>0)lampShade(c2,true);
+}
+var cur=null,prevCanvas=null,fadeT0=0;
+function rebake(name,animate){var tgt=(cur===litA)?litB:litA;bake(tgt,name);if(animate&&cur&&!reduce){prevCanvas=cur;fadeT0=performance.now()}else prevCanvas=null;cur=tgt;lightCache={}}
+function refreshScene(animate){b.clearRect(0,0,W,H);drawBase();rebake(tod,animate)}
+function frame(now){
+  ctx.clearRect(0,0,W,H);
+  if(prevCanvas){var t=Math.min(1,(now-fadeT0)/1000);ctx.drawImage(prevCanvas,0,0);ctx.globalAlpha=t;ctx.drawImage(cur,0,0);ctx.globalAlpha=1;if(t>=1)prevCanvas=null}else ctx.drawImage(cur,0,0);
+  if(tod==='night'||tod==='evening'){var tw=Math.floor(now/700);ctx.fillStyle=tod==='night'?'#fff3cc':'#f4d4c0';for(var i=0;i<STARS.length;i++){if(reduce||((tw+i)%5!==0))ctx.fillRect(STARS[i][0],STARS[i][1],1,1)}}
+  drawChar(now,LIGHT[tod]);
+  if(lampPulse&&!reduce&&Math.floor(now/1300)%2===0){ctx.fillStyle='rgba(255,236,176,.22)';ctx.fillRect(74,76,12,8)}
+  drawGlow(now);
+  requestAnimationFrame(frame);
+}
+
+/* ================= hotspots & tags ================= */
+function pct(v,t){return (v/t*100)+'%'}
+function place(id,x,y,w,h){var e=document.getElementById(id);e.style.left=pct(x,W);e.style.top=pct(y,H);e.style.width=pct(w,W);e.style.height=pct(h,H)}
+place('hWindow',14,6,54,52);place('hMemo',68,30,11,15);place('hShelf',78,34,28,22);
+place('hLamp',70,70,15,26);place('hClock',85,84,11,14);place('hBed',6,60,62,72);place('hPhone',94,128,24,18);
+var TAGS=[['이번 주',23,59,0],['해 볼 것',68,46,0],['기술 책',106,57,1],['잠 안 올 때',69,73,1],['시간',97,99,1],['어젯밤',26,122,0],['데이터',118,147,1]];
+function renderTags(){var t=document.getElementById('tags');t.innerHTML=store.guide?TAGS.map(function(g){return '<span class="tag'+(g[3]?' r':'')+'" style="left:'+pct(g[1],W)+';top:'+pct(g[2],H)+'">'+g[0]+'</span>'}).join(''):''}
+
+/* ================= talk ================= */
+function svgIcon(rows,pal){var w=rows[0].length,h=rows.length,s='';for(var j=0;j<h;j++)for(var i=0;i<w;i++){var ch=rows[j][i];if(ch!=='.'&&pal[ch])s+='<rect x="'+i+'" y="'+j+'" width="1" height="1" fill="'+pal[ch]+'"/>'}return '<svg viewBox="0 0 '+w+' '+h+'" shape-rendering="crispEdges" aria-hidden="true">'+s+'</svg>'}
+var I_SUN=["....y....",".y.....y.","...yyy...","..yyYyy..","y.yYYyy.y","..yyyyy..","...yyy...",".y.....y.","....y...."];
+var I_CLOUD=[".........",".........","...hhg...","..hgggg..",".hgggggGG","gggggggGG","ggggggGGG",".GGGGGGG.","........."];
+var I_RAIN=["...hhg...","..hgggg..",".hggggGGG","gggggGGGG",".GGGGGGG.",".........",".b..b..b.","b..b..b..","........."];
+var IP={y:'#f6c04f',Y:'#ffe49a',g:'#bfb8df',G:'#9890c2',h:'#e4dff2',b:'#82bce8'};
+var MOOD={sun:'맑음',cloud:'흐림',rain:'비'};
+function set(html,focusSel){talk.innerHTML=html;var f=focusSel&&talk.querySelector(focusSel);if(f)f.focus()}
+function rec(){return store.records[todayKey()]||null}
+function moodBtns(){return ['sun','cloud','rain'].map(function(m){return '<button class="mood" data-m="'+m+'">'+svgIcon(m==='sun'?I_SUN:m==='cloud'?I_CLOUD:I_RAIN,IP)+'<span>'+MOOD[m]+'</span></button>'}).join('')}
+function bindMoods(){Array.prototype.forEach.call(talk.querySelectorAll('.mood'),function(bt){bt.addEventListener('click',function(){record(bt.getAttribute('data-m'))})})}
+function guideLink(){return store.guide?'<button class="link" id="guideOff">안내 글씨 숨기기</button>':''}
+function bindGuide(){var g=document.getElementById('guideOff');if(g)g.addEventListener('click',function(){store.guide=false;save();renderTags();render()})}
+function expLine(){if(!store.exp)return '';var r=ruleById(store.exp.id);if(!r)return '';var day=daysBetween(store.exp.start,todayKey())+1;
+  return day>7?'<p class="quiet">일주일이 지났어. 메모에서 결과를 볼 수 있어.</p>':'<p class="quiet">이번 주에 해 보는 것: '+r.title+', '+day+'일째</p>'}
+function render(){
+  var r=rec();
+  if(tod==='night'){lampPulse=true;set('<p class="head">잠이 안 오면 램프를 눌러.</p><p class="quiet">밤에는 알림을 보내지 않아.</p>');return}
+  lampPulse=false;
+  if(r&&r.mood){doneView();return}
+  var worry=store.worry&&store.worry.text?'<p class="quiet">밤에 적어 둔 것: “'+esc(store.worry.text)+'”</p>':'';
+  set(lastNightHtml()+'<p style="margin-top:12px">'+(tod==='evening'?'아침 기분을 안 남겼네. 지금 남겨도 돼.':'아침 기분은?')+'</p><div class="moods">'+moodBtns()+'</div>'+worry+expLine()+'<div class="links">'+guideLink()+'</div>');
+  bindMoods();bindGuide();
+}
+function doneView(msg){
+  var r=rec()||{},parts=[MOOD[r.mood]];if(r.emotion)parts.push(r.emotion);var last=parts.pop();
+  set('<p class="head">'+(msg||('오늘은 '+(parts.length?parts.join(', ')+', ':'')+ro(last)+' 남겼어.'))+'</p>'+expLine()+
+    (canSave?'':'<p class="quiet">이 브라우저에선 저장이 안 돼. 창을 닫으면 사라져.</p>')+
+    '<div class="links"><button class="link" id="emoBtn">'+(r.emotion?'감정 바꾸기':'감정도 붙이기')+'</button><button class="link" id="moodBtn">기분 바꾸기</button>'+guideLink()+'</div>');
+  document.getElementById('emoBtn').addEventListener('click',emotions);
+  document.getElementById('moodBtn').addEventListener('click',function(){set('<p>다시 골라 줘.</p><div class="moods">'+moodBtns()+'</div>','.mood');bindMoods()});
+  bindGuide();
+}
+function record(m){
+  var k=todayKey(),r=store.records[k]||{},first=!r.mood;r.mood=m;store.records[k]=r;if(store.worry)store.worry=null;save();
+  var now=performance.now();happyUntil=now+2000;if(first){noteUntil=now+1600;refreshScene(false)}
+  doneView('오늘은 '+ro(MOOD[m])+' 남겼어.');
+}
+var EMO=['불안','억울함','지침','짜증','평온','설렘'];
+function emotions(){
+  var r=rec()||{};
+  set('<p>지금 마음에 제일 가까운 거.</p><div class="words">'+EMO.map(function(e){return '<button class="word" aria-pressed="'+(r.emotion===e)+'" data-e="'+e+'">'+e+'</button>'}).join('')+'</div><button class="primary" id="emoDone">여기까지</button>','.word');
+  Array.prototype.forEach.call(talk.querySelectorAll('.word'),function(bt){bt.addEventListener('click',function(){
+    var on=bt.getAttribute('aria-pressed')==='true';Array.prototype.forEach.call(talk.querySelectorAll('.word'),function(x){x.setAttribute('aria-pressed','false')});
+    var rr=store.records[todayKey()]||{};if(on)delete rr.emotion;else{bt.setAttribute('aria-pressed','true');rr.emotion=bt.getAttribute('data-e')}store.records[todayKey()]=rr;save()})});
+  document.getElementById('emoDone').addEventListener('click',function(){var rr=rec()||{};if(rr.mood)doneView();else render()});
+}
+
+/* ================= overlays ================= */
+var opened=null,opener=null,sosMode=null;
+function openOv(id){closeOv(true);opener=document.activeElement;opened=document.getElementById(id);opened.classList.add('on');opened.setAttribute('tabindex','-1');
+  ['stage','talk'].forEach(function(x){document.getElementById(x).setAttribute('inert','')});opened.scrollTop=0;opened.focus()}
+function closeOv(silent){if(!opened)return;opened.classList.remove('on');opened=null;sosMode=null;['stage','talk'].forEach(function(x){document.getElementById(x).removeAttribute('inert')});if(!silent&&opener&&opener.focus)opener.focus()}
+Array.prototype.forEach.call(document.querySelectorAll('[data-close]'),function(bt){bt.addEventListener('click',function(){closeOv()})});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeOv()});
+
+function openWeek(){
+  var c=document.getElementById('weekCv'),x=c.getContext('2d');c.width=96;c.height=72;
+  var a=hexRgb('#0f1236'),bb=hexRgb('#1f2452');for(var y=0;y<72;y++){var t=y/71;x.fillStyle='rgb('+Math.round(a[0]+(bb[0]-a[0])*t)+','+Math.round(a[1]+(bb[1]-a[1])*t)+','+Math.round(a[2]+(bb[2]-a[2])*t)+')';x.fillRect(0,y,96,1)}
+  for(var i=0;i<26;i++){x.fillStyle='rgba(220,215,255,'+(0.2+hash(i,3)*0.35)+')';x.fillRect(Math.floor(hash(i,1)*96),Math.floor(hash(i,2)*70),1,1)}
+  var cal=lastDays(todayKey(),7),vals=[],clipped=false;
+  var pts=cal.map(function(c2,i){var p=Math.round((i+.5)*96/7);if(!c2.n)return null;vals.push(c2.n.onset);var v=(c2.n.onset+120)/360;if(v<0||v>1)clipped=true;return [p,Math.round(62-Math.max(0,Math.min(1,v))*54)]});
+  var prev=null,gap=false;pts.forEach(function(p){if(!p){gap=true;return}if(prev)lineTo(x,prev[0],prev[1],p[0],p[1],gap?'#6f6aa8':'#c9c0f2',gap);prev=p;gap=false});
+  pts.forEach(function(p,i){var cx2=Math.round((i+.5)*96/7);if(!p){x.fillStyle='#4d5290';[[0,-1],[-1,0],[1,0],[0,1]].forEach(function(o){x.fillRect(cx2+o[0],36+o[1],1,1)});return}
+    x.fillStyle='#f2c46d';[[0,-1],[-1,0],[1,0],[0,1]].forEach(function(o){x.fillRect(p[0]+o[0],p[1]+o[1],1,1)});x.fillStyle='#fff4d2';x.fillRect(p[0],p[1],1,1)});
+  document.getElementById('weekDays').innerHTML=cal.map(function(c2){return '<span>'+WD[addDays(new Date(c2.key+'T00:00:00'),-1).getDay()]+'</span>'}).join('');
+  var s='<p class="head" style="margin-top:8px">이번 주 잠든 시각</p><p class="quiet">위로 갈수록 늦게 잔 밤, 빈 점은 기록 없는 밤.</p>';
+  if(vals.length){var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);s+='<p>제일 이른 밤 '+fmt(mn)+', 제일 늦은 밤 '+fmt(mx)+'. '+dur(mx-mn)+' 차이가 났어.</p>'}else s+='<p>이번 주엔 시계가 잰 밤이 없어.</p>';
+  if(clipped)s+='<p class="quiet">10:00 PM보다 이르거나 4:00 AM보다 늦은 밤은 맨 끝에 붙여 그렸어.</p>';
+  s+='<p class="quiet">'+(store.source==='file'?'삼성 헬스 파일 기록이야.':'지금은 예시 데이터야.')+'</p>';
+  document.getElementById('weekText').innerHTML=s;openOv('ovWeek');
+}
+
+function evidenceHtml(r){return '<details><summary>이걸 고른 이유</summary><div class="ev"><p>'+r.why+'</p><p class="quiet">'+r.refs.join('<br>')+'</p></div></details>'}
+function metricValue(r,m,c){return r.metric==='worry'?c.sosWorry:m[r.metric]}
+function openMemo(){
+  var body=document.getElementById('memoBody');
+  if(store.exp){
+    var r=ruleById(store.exp.id),day=daysBetween(store.exp.start,todayKey())+1;
+    if(day<=7&&!store.exp.demoDone){
+      body.innerHTML='<p class="head">'+r.title+'</p><p>'+r.how+'</p><p class="quiet">'+day+'일째. 7일이 지나면 시작 전 일주일과 비교해서 알려 줄게.</p>'+evidenceHtml(r)+
+        '<div class="links"><button class="link" id="expStop">그만할래</button><button class="link" id="expDemo">시연: 7일 뒤 결과 보기</button></div>';
+      document.getElementById('expStop').addEventListener('click',function(){store.exp=null;save();openMemo();render()});
+      document.getElementById('expDemo').addEventListener('click',function(){store.exp.demoDone=true;save();openMemo()});
+    }else{
+      body.innerHTML=resultHtml(r)+'<button class="primary" id="expKeep">일주일 더 해 볼게</button><div class="links"><button class="link" id="expNext">다른 걸 골라 볼래</button></div>';
+      document.getElementById('expKeep').addEventListener('click',function(){store.exp={id:r.id,start:todayKey(),base:store.exp.base};save();openMemo();render()});
+      document.getElementById('expNext').addEventListener('click',function(){store.exp=null;memoIdx++;save();openMemo();render()});
+    }
+    openOv('ovMemo');return;
+  }
+  var cd=candidates();
+  if(cd.m.n<5){body.innerHTML='<p class="head">아직 고르기 일러.</p><p>시계 기록이 '+cd.m.n+'밤뿐이야. 5밤이 모이면 지난 기록을 보고 하나 골라 줄게.</p>';openOv('ovMemo');return}
+  if(!cd.list.length){body.innerHTML='<p class="head">지금은 바꿀 게 딱히 안 보여.</p><p class="quiet">지난 '+cd.m.n+'밤 동안 잠든 시각 차이 '+dur(cd.m.onsetRange)+', 일어난 시각 차이 '+dur(cd.m.wakeRange)+'.</p>';openOv('ovMemo');return}
+  var r2=cd.list[memoIdx%cd.list.length];
+  body.innerHTML='<p class="head">'+r2.title+'</p><p>'+r2.how+'</p><p class="quiet">'+r2.data(cd.m,cd.c)+'</p>'+evidenceHtml(r2)+
+    '<button class="primary" id="expStart">7일만 해 볼게</button>'+(cd.list.length>1?'<div class="links"><button class="link" id="expOther">다른 거 볼래</button></div>':'');
+  document.getElementById('expStart').addEventListener('click',function(){store.exp={id:r2.id,start:todayKey(),base:metricValue(r2,cd.m,cd.c)};save();openMemo();render()});
+  var o2=document.getElementById('expOther');if(o2)o2.addEventListener('click',function(){memoIdx++;openMemo()});
+  openOv('ovMemo');
+}
+function resultHtml(r){
+  var before=store.exp.base,after,nAfter;
+  if(store.exp.demoDone){after=r.id==='wake'?70:r.id==='awake'?18:r.id==='late'?1:0;nAfter=7}
+  else{var m=metrics(lastDays(todayKey(),7).map(function(x){return x.n}));nAfter=m.n;after=m.n>=5?metricValue(r,m,context()):null}
+  var head=store.exp.demoDone?'<p class="quiet">시연용 가상 데이터로 보여주는 결과야.</p>':'';
+  if(after==null||before==null)return head+'<p class="head">판단하기엔 기록이 모자라.</p><p>지난 일주일 시계 기록이 '+nAfter+'밤뿐이야.</p>';
+  var cnt=r.metric==='late'||r.metric==='worry',diff=before-after,better=cnt?diff>=1:(diff>=30||diff>=before*0.2),worse=!better&&(cnt?after-before>=1:after-before>=30);
+  var line=r.label+'<br>'+r.fmtv(before)+'에서 '+r.fmtv(after)+'로';
+  if(better)return head+'<p class="head">'+line+'</p><p>줄었어. 이것 하나 때문이라고 단정할 순 없지만, 이어 가 볼 만해.</p>';
+  if(worse)return head+'<p class="head">'+line+'</p><p>오히려 늘었어. 이번 주가 원래 빡빡했을 수도 있고, 이 방법이 안 맞을 수도 있어. 무리였으면 그만둬도 돼.</p>';
+  return head+'<p class="head">'+line+'</p><p>숫자로는 차이가 거의 없어. 일주일 더 해 보거나 다른 걸 골라 보자.</p>';
+}
+
+var BOOKCOL={mind:'#8bbfa6',hold:'#7cb2dc',feel:'#e3a0b4',people:'#efbf69'};
+var BOOKS=[
+  {k:'mind',name:'마음챙김',title:'5-4-3-2-1',text:'보이는 것 다섯, 들리는 것 넷, 닿는 것 셋, 냄새 둘, 맛 하나를 세어 봐.'},
+  {k:'hold',name:'고통 감내',title:'찬물로 식히기',text:'감정이 확 올라오면 찬물에 얼굴을 30초 대 봐.'},
+  {k:'feel',name:'감정 조절',title:'이름 붙이기',text:'"나 지금 억울하네"처럼 감정에 이름만 붙여 봐.'},
+  {k:'people',name:'대인관계',title:'밤 카톡 미루기',text:'"지금 자려고. 내일 답할게." 한 줄만 보내.'}
+];
+(function(){var sp=document.getElementById('spines'),h=[168,150,176,158];
+  BOOKS.forEach(function(bk,i){var bt=document.createElement('button');bt.className='spine';bt.setAttribute('aria-pressed','false');bt.style.background=BOOKCOL[bk.k];bt.style.height=h[i]+'px';bt.textContent=bk.name;bt.setAttribute('aria-label',bk.name+': '+bk.title);bt.addEventListener('click',function(){openPage(i)});sp.appendChild(bt)})})();
+function openPage(i){
+  var bk=BOOKS[i],pg=document.getElementById('page');
+  Array.prototype.forEach.call(document.querySelectorAll('.spine'),function(s,j){s.setAttribute('aria-pressed',String(i===j))});
+  pg.style.setProperty('--spine',BOOKCOL[bk.k]);
+  pg.innerHTML='<h3>'+bk.title+'</h3><p style="margin:0">'+bk.text+'</p><p style="margin:14px 0 0"><button class="link" id="usedBtn">오늘 써 봤어</button></p>';
+  pg.classList.add('on');document.getElementById('booksHint').textContent='';
+  document.getElementById('usedBtn').addEventListener('click',function(){var k=todayKey(),r=store.records[k]||{};r.skills=(r.skills||[]).concat([bk.title]);store.records[k]=r;save();
+    var s=document.createElement('span');s.textContent='남겼어.';this.parentNode.replaceChild(s,this);noteUntil=performance.now()+1600});
+}
+
+var glowT0=0;
+function openSos(){sosMode='menu';glowT0=performance.now();sosMenu();openOv('ovSos')}
+function sosMenu(){var bd=document.getElementById('sosBody');
+  bd.innerHTML='<p class="head" style="color:#efd9bd">깼어? 잠이 안 와?</p><div class="opts"><button class="link" data-s="rest">다시 자고 싶어</button><button class="link" data-s="worry">생각이 너무 많아</button><button class="link" data-s="help">너무 힘들어</button></div>';
+  Array.prototype.forEach.call(bd.querySelectorAll('[data-s]'),function(x){x.addEventListener('click',function(){sos(x.getAttribute('data-s'))})})}
+function sos(s){
+  var bd=document.getElementById('sosBody');
+  if(s==='help'){openOv('ovHelp');return}
+  if(s==='rest'){sosMode='breathe';glowT0=performance.now();
+    bd.innerHTML='<p>빛이 커질 때 들이쉬고, 작아질 때 내쉬어.</p><p>자려고 애쓰지 않아도 돼. 누워서 쉬는 것도 쉬는 거야.</p><p class="quiet" style="color:#a8917e;margin-top:14px">한참 지나도 말똥하면 잠깐 일어나 불을 낮추고 있다가, 졸릴 때 다시 누워.</p><button class="primary" id="lieDown">다시 누울게</button>';
+    document.getElementById('lieDown').addEventListener('click',function(){closeOv()});document.getElementById('lieDown').focus();return}
+  if(s==='worry'){
+    if(store.sosWorry.indexOf(todayKey())<0){store.sosWorry.push(todayKey());store.sosWorry=store.sosWorry.slice(-30);save()}
+    bd.innerHTML='<p>머릿속에 있는 거 한 줄만.</p><input class="worry" id="worryIn" maxlength="60" placeholder="예: 내일 지각하면 어떡하지" aria-label="걱정 한 줄"><button class="primary" id="worrySave">여기 두고 갈게</button>';
+    document.getElementById('worrySave').addEventListener('click',function(){var v=document.getElementById('worryIn').value.trim();if(v){store.worry={text:v,date:todayKey()};save()}
+      bd.innerHTML='<p>'+(v?'적어 뒀어. 아침에 방에서 보여줄게.':'안 적어도 괜찮아.')+'</p><button class="primary" id="lieDown">다시 누울게</button>';
+      document.getElementById('lieDown').addEventListener('click',function(){closeOv()});document.getElementById('lieDown').focus()});
+  }
+}
+var gcv=document.getElementById('glowCv'),gx=gcv.getContext('2d');gcv.width=96;gcv.height=60;
+function glow(c2,cx,cy,r,col,strength){var x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(c2.canvas.width-1,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(c2.canvas.height-1,Math.ceil(cy+r));c2.fillStyle=col;
+  for(var y=y0;y<=y1;y++)for(var x=x0;x<=x1;x++){var d=Math.sqrt((x-cx)*(x-cx)+(y-cy)*(y-cy))/r;if(d>=1)continue;if((1-d)*strength*16>BAYER[(y&3)*4+(x&3)])c2.fillRect(x,y,1,1)}}
+function drawGlow(now){
+  if(!opened||opened.id!=='ovSos')return;
+  gx.fillStyle='#0e0c1a';gx.fillRect(0,0,96,60);
+  var r;if(sosMode==='breathe'&&!reduce){var t=((now-glowT0)/1000)%10;r=t<4?12+10*(t/4):22-10*((t-4)/6)}else r=reduce?16:16+Math.round(Math.sin(now/1400));
+  glow(gx,48,30,r+10,'rgba(255,196,120,.15)',.85);glow(gx,48,30,r,'rgba(255,214,150,.28)',1);
+  var sh=['#c78543','#efb45d','#ffd788','#ffe9b0','#fff6dc'];
+  gx.fillStyle=sh[3];gx.fillRect(44,18,8,2);gx.fillStyle=sh[2];gx.fillRect(43,20,10,2);gx.fillRect(42,22,12,4);gx.fillStyle=sh[1];gx.fillRect(42,26,12,2);gx.fillStyle=sh[4];gx.fillRect(43,20,2,6);
+  gx.fillStyle='#4f3f66';gx.fillRect(47,28,2,5);gx.fillRect(45,33,6,2);
+}
+
+var wipeArmed=false;
+function openData(){
+  document.getElementById('dataState').textContent=store.source==='file'?('삼성 헬스 파일에서 가져온 밤 '+nights().length+'개를 쓰는 중이야.'):'지금은 예시 데이터로 보여주는 중이야.';
+  document.getElementById('guideToggle').textContent=store.guide?'방 안내 글씨 끄기':'방 안내 글씨 켜기';
+  wipeArmed=false;document.getElementById('wipe').textContent='내 기록 지우기';openOv('ovData');
+}
+document.getElementById('useDemo').addEventListener('click',function(){store.nights=null;store.source='demo';save();openData();render()});
+document.getElementById('guideToggle').addEventListener('click',function(){store.guide=!store.guide;save();renderTags();openData();render()});
+document.getElementById('wipe').addEventListener('click',function(){
+  if(!wipeArmed){wipeArmed=true;this.textContent='한 번 더 누르면 기분·감정·걱정·실험 기록을 지워';return}
+  store.records={};store.worry=null;store.nights=null;store.source='demo';store.exp=null;store.sosWorry=[];save();wipeArmed=false;this.textContent='지웠어';refreshScene(false);render()});
+document.getElementById('csvIn').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0],st=document.getElementById('dataState');if(!f)return;
+  var rd=new FileReader();rd.onerror=function(){st.textContent='파일을 읽지 못했어. 다시 골라 줘.'};
+  rd.onload=function(){var res=parseSamsung(String(rd.result));if(!res.length){st.textContent='이 파일에선 잠든 시각과 깬 시각을 못 찾았어. 이름에 sleep이 들어간 CSV인지 확인해 줘.';return}
+    store.nights=res.slice(-30);store.source='file';save();st.textContent='밤 '+res.length+'개를 찾았어. 마지막 기록은 '+md(res[res.length-1].date)+'이야.';render()};
+  rd.readAsText(f);
+});
+/* Samsung Health export (meaning of UTC vs local must be checked against a real file) */
+function parseCsv(text){var rows=[],row=[],c0='',qq=false;
+  for(var i=0;i<text.length;i++){var ch=text[i];
+    if(qq){if(ch==='"'){if(text[i+1]==='"'){c0+='"';i++}else qq=false}else c0+=ch}
+    else if(ch==='"')qq=true;else if(ch===','){row.push(c0);c0=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(c0);rows.push(row);row=[];c0=''}else c0+=ch}
+  if(c0||row.length){row.push(c0);rows.push(row)}return rows.filter(function(r){return r.some(function(c){return c.trim()})})}
+function parseSamsung(text){
+  var rows=parseCsv(text),hi=-1;for(var i=0;i<Math.min(rows.length,5);i++){if(rows[i].some(function(c){return /start_time$/i.test(c.trim())})){hi=i;break}}
+  if(hi<0)return [];var head=rows[hi].map(function(h){return h.trim()});
+  function col(re){for(var j=0;j<head.length;j++)if(re.test(head[j]))return j;return -1}
+  var si=col(/(^|\.)start_time$/i),ei=col(/(^|\.)end_time$/i),oi=col(/time_offset$/i);if(si<0||ei<0)return [];
+  function wall(s,off){s=(s||'').trim();if(/^\d{12,}$/.test(s)){var d0=new Date(+s);return Date.UTC(d0.getFullYear(),d0.getMonth(),d0.getDate(),d0.getHours(),d0.getMinutes())}
+    var m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/);if(!m)return null;
+    var bs=Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]),tz=m[6]||null,o=(off||'').match(/([+-])(\d{2}):?(\d{2})/);
+    if(tz){var ms=tz==='Z'?bs:bs-(tz[0]==='-'?-1:1)*((+tz.slice(1,3))*60+(+tz.slice(-2)))*60000;if(o)return ms+(o[1]==='-'?-1:1)*((+o[2])*60+(+o[3]))*60000;var d1=new Date(ms);return Date.UTC(d1.getFullYear(),d1.getMonth(),d1.getDate(),d1.getHours(),d1.getMinutes())}
+    if(o)return bs+(o[1]==='-'?-1:1)*((+o[2])*60+(+o[3]))*60000;return bs}
+  var ses=[];for(var r=hi+1;r<rows.length;r++){var c=rows[r],off=oi>=0?c[oi]:'',s=wall(c[si],off),e=wall(c[ei],off);if(s==null||e==null||e<=s||e-s>20*3600000)continue;ses.push([s,e])}
+  ses.sort(function(a,b2){return a[0]-b2[0]});var merged=[];ses.forEach(function(x){var l=merged[merged.length-1];if(l&&x[0]-l[1]<=60*60000)l[1]=Math.max(l[1],x[1]);else merged.push([x[0],x[1]])});
+  var byDate={};merged.forEach(function(x){var e=new Date(x[1]),key=e.getUTCFullYear()+'-'+('0'+(e.getUTCMonth()+1)).slice(-2)+'-'+('0'+e.getUTCDate()).slice(-2),len=x[1]-x[0];
+    if(!byDate[key]||len>byDate[key].len){var day0=Date.UTC(e.getUTCFullYear(),e.getUTCMonth(),e.getUTCDate());byDate[key]={date:key,onset:Math.round((x[0]-day0)/60000),wake:e.getUTCHours()*60+e.getUTCMinutes(),awake:null,len:len}}});
+  return Object.keys(byDate).sort().map(function(k){var o=byDate[k];delete o.len;return o});
+}
+
+/* ================= wiring ================= */
+function applyTheme(){app.style.backgroundColor=LIGHT[tod].app;app.classList.toggle('night',tod==='night')}
+document.getElementById('hWindow').addEventListener('click',openWeek);
+document.getElementById('hMemo').addEventListener('click',openMemo);
+document.getElementById('hShelf').addEventListener('click',function(){document.getElementById('page').classList.remove('on');document.getElementById('booksHint').textContent='책을 하나 꺼내 봐.';Array.prototype.forEach.call(document.querySelectorAll('.spine'),function(s){s.setAttribute('aria-pressed','false')});openOv('ovBooks')});
+document.getElementById('hLamp').addEventListener('click',openSos);
+document.getElementById('hPhone').addEventListener('click',openData);
+document.getElementById('hBed').addEventListener('click',function(){set(lastNightHtml()+'<p class="quiet">'+(store.source==='file'?'삼성 헬스 파일 기록이야.':'지금은 예시 데이터야.')+'</p><div class="links"><button class="link" id="backTalk">알겠어</button></div>','#backTalk');document.getElementById('backTalk').addEventListener('click',render)});
+document.getElementById('hClock').addEventListener('click',function(){var nx=ORDER[(ORDER.indexOf(tod)+1)%4];demoTod=nx;tod=nx;applyTheme();rebake(nx,true);render();
+  var p=document.createElement('p');p.className='quiet';p.textContent='시연용으로 '+{morning:'아침',day:'낮',evening:'저녁',night:'밤'}[nx]+'으로 바꿨어.';talk.appendChild(p)});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&!demoTod){var t=autoTod();if(t!==tod){tod=t;applyTheme();rebake(t,true)}if(!opened)render()}});
+
+if(qs.get('rec')){store.records[todayKey()]={mood:qs.get('rec')}}
+applyTheme();refreshScene(false);renderTags();render();fit();
+var oq=qs.get('o');
+if(oq==='week')openWeek();else if(oq==='memo')openMemo();else if(oq==='books')openOv('ovBooks');else if(oq==='book0'){openOv('ovBooks');openPage(0)}else if(oq==='sos')openSos();else if(oq==='data')openData();else if(oq==='help')openOv('ovHelp');
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
