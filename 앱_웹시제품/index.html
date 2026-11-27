@@ -22,6 +22,12 @@ body{background:#121427;padding:12px 0}
 .tag.r{transform:translateX(-100%)}
 .talk{padding:18px 22px 26px;min-height:200px}
 .talk p{margin:0 0 6px}
+ .support{padding:16px 22px 4px}
+ .support .primary{margin:8px 0 10px;min-height:48px}
+ .support p{margin:0 0 8px}
+ .support .link,.opts .link{min-height:44px}
+ #ovCare{background:#201c34}
+ #ovCare .body{padding-top:56px}
 .head{font-family:'Galmuri14',sans-serif;font-size:14px;color:#fff3d8;margin-bottom:2px!important}
 .quiet{color:var(--dim);font-size:13px;line-height:1.6}
 .moods{display:flex;gap:26px;margin:10px 0 12px}
@@ -93,6 +99,7 @@ details .ev{margin-top:10px}
     <button class="hot" id="hPhone" aria-label="휴대폰: 수면 데이터 연결"></button>
     <button class="hot" id="hBed" aria-label="침대: 어젯밤 기록"></button>
   </div>
+  <section class="support" id="support" aria-label="잠이 힘들 때 도움"></section>
   <div class="talk" id="talk" aria-live="polite"></div>
 
   <section class="ov" id="ovWeek" aria-label="이번 주 잠든 시각">
@@ -109,17 +116,27 @@ details .ev{margin-top:10px}
     <button class="home" data-close>방으로</button>
     <div class="spines" id="spines"></div>
     <div class="page" id="page"></div>
-    <div class="body"><p class="quiet" id="booksHint">책을 하나 꺼내 봐.</p></div>
+    <div class="body"><p class="quiet" id="booksHint"></p></div>
   </section>
   <section class="ov" id="ovSos" aria-label="잠 안 올 때">
     <button class="home" data-close style="color:#9b8a7a">방으로</button>
     <canvas id="glowCv" aria-hidden="true"></canvas>
     <div class="body" id="sosBody"></div>
   </section>
-  <section class="ov" id="ovHelp" aria-label="도움 연결">
+  <section class="ov" id="ovCare" aria-label="잠 문제가 계속될 때">
+    <button class="home" data-close>방으로</button>
+    <div class="body">
+      <p class="head">잠 문제가 계속될 때</p>
+      <p>잠들기 어렵거나 자주 깨서 낮 생활이 힘들다면, 가까운 의료기관이나 수면클리닉에 문의해 볼 수 있어요.</p>
+      <p>심한 코골이와 함께 숨이 멎는다는 말을 들었거나 낮에 많이 졸리다면 그 점도 함께 알려주세요.</p>
+      <p class="quiet">“요즘 잠들기 어렵거나 밤에 자주 깨요. 낮에도 힘든데 수면 문제를 상담할 수 있을까요?”</p>
+      <button class="primary" id="careWeek">최근 수면 흐름 보기</button>
+      <button class="link" id="careHelp">지금 위기 도움을 받고 싶어요</button>
+    </div>
+  </section>
+  <section class="ov" id="ovHelp" aria-label="위기 도움">
     <div class="body" style="padding-top:56px">
-      <p>지금 많이 힘드시군요.</p>
-      <p>혼자 버티지 않으셔도 됩니다. 지금 바로 이야기할 수 있는 곳이 있어요.</p>
+      <p>혼자 버티지 않으셔도 돼요. 지금 바로 이야기할 수 있는 곳이 있어요.</p>
       <p style="margin-top:22px"><a href="tel:109">자살예방상담전화 109</a><br><span class="quiet">24시간 연결돼요</span></p>
       <p><a href="tel:15770199">정신건강위기상담전화 1577-0199</a></p>
       <p style="margin-top:22px">위험이 급하면 112나 119로 전화해 주세요.</p>
@@ -129,10 +146,10 @@ details .ev{margin-top:10px}
   <section class="ov" id="ovData" aria-label="수면 데이터 연결">
     <button class="home" data-close>방으로</button>
     <div class="body" style="padding-top:56px">
-      <p>수면 기록은 직접 적지 않아도 돼. 시계가 잰 걸 가져와.</p>
+      <p>삼성 헬스에서 내보낸 수면 CSV를 불러올 수 있어요.</p>
       <p class="quiet" id="dataState"></p>
       <label class="filelabel primary" tabindex="0">삼성 헬스 파일 불러오기<input type="file" id="csvIn" accept=".csv,text/csv"></label>
-      <p class="quiet" style="margin-top:10px">삼성 헬스 앱 설정에서 개인 데이터를 내려받고, 이름에 sleep이 들어간 CSV를 고르면 돼. 앱 버전에서는 헬스 커넥트로 자동 연결할 예정이야.</p>
+      
       <div class="links"><button class="link" id="useDemo">예시 데이터로 보기</button><button class="link" id="guideToggle"></button><button class="link" id="wipe">내 기록 지우기</button></div>
     </div>
   </section>
@@ -155,15 +172,17 @@ fit();window.addEventListener('resize',fit);
 
 /* ================= storage ================= */
 var KEY='sumyeon.proto.v4';
-var store={records:{},worry:null,nights:null,source:'demo',guide:true,exp:null,sosWorry:[]};
+var store={records:{},worry:null,nights:null,source:'none',guide:true,exp:null,sosWorry:[],demo:false,supportDismissed:null};
 var canSave=true;
 try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&typeof o==='object'){
   if(o.records&&typeof o.records==='object'&&!Array.isArray(o.records))store.records=o.records;
   if(o.worry&&typeof o.worry.text==='string')store.worry=o.worry;
   if(Array.isArray(o.nights))store.nights=o.nights.filter(function(n){return n&&typeof n.date==='string'&&typeof n.onset==='number'});
-  if(o.source==='file'||o.source==='demo')store.source=o.source;
+  if(o.source==='file'&&store.nights&&store.nights.length)store.source='file';
+  if(typeof o.demo==='boolean')store.demo=o.demo;
+  if(typeof o.supportDismissed==='string')store.supportDismissed=o.supportDismissed;
   if(typeof o.guide==='boolean')store.guide=o.guide;
-  if(o.exp&&typeof o.exp.id==='string')store.exp=o.exp;
+  if(o.exp&&o.exp.source===store.source&&store.source==='file'&&typeof o.exp.id==='string')store.exp=o.exp;
   if(Array.isArray(o.sosWorry))store.sosWorry=o.sosWorry.filter(function(s){return typeof s==='string'});
 }}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store));canSave=true}catch(e){canSave=false}return canSave}
@@ -187,7 +206,11 @@ function demoNights(){
   for(var i=0;i<7;i++){if(on[i]!=null)out.push({date:ymd(addDays(t,i-6)),onset:on[i],wake:wk[i],awake:aw[i]})}
   return out;
 }
-function nights(){return store.source==='file'&&store.nights&&store.nights.length?store.nights:demoNights()}
+function dataSource(){return store.demo?'demo':store.source}
+function nights(){
+  if(store.demo)return demoNights();
+  return store.source==='file'?store.nights:[];
+}
 function nightOf(key){var n=nights();for(var i=0;i<n.length;i++)if(n[i].date===key)return n[i];return null}
 function lastDays(endKey,count){var out=[],end=new Date(endKey+'T00:00:00');for(var d=count-1;d>=0;d--){var k=ymd(addDays(end,-d));out.push({key:k,n:nightOf(k)})}return out}
 function median(a){var s=a.slice().sort(function(x,y){return x-y}),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
@@ -201,15 +224,17 @@ function metrics(list){
   m.waso=aw.length?avg(aw):null;m.late=on.filter(function(x){return x-med>=60}).length;return m;
 }
 function others(){var last=todayKey();return nights().filter(function(x){return x.date!==last})}
-function tiredFlag(){var last=nightOf(todayKey());if(!last)return false;var v=others().map(function(x){return x.onset});return v.length>=5&&last.onset-median(v)>=60}
+function tiredFlag(){return false}
 function lastNightHtml(){
+  if(dataSource()==='none')return '<p class="quiet">아직 가져온 수면 기록이 없어요.</p>';
   var n=nightOf(todayKey());
   if(!n){var all=nights();
     if(store.source==='file'&&all.length)return '<p class="quiet">불러온 파일엔 어젯밤 기록이 없어. 마지막 기록은 '+md(all[all.length-1].date)+'이야.</p>';
     return '<p class="quiet">어젯밤 기록은 시계에 안 남았어.</p>'}
-  var slept=n.wake-n.onset-(n.awake||0),v=others().map(function(x){return x.onset}),cmp='';
+  var slept=n.sleepMinutes??(n.awake==null?null:n.wake-n.onset-n.awake),v=others().map(function(x){return x.onset}),cmp='';
   if(v.length>=5){var d=n.onset-median(v);if(d>=30)cmp=' 평소보다 '+dur(d)+' 늦게 잠들었어.';else if(d<=-30)cmp=' 평소보다 '+dur(-d)+' 일찍 잠들었어.'}
-  return '<p class="head">어젯밤 '+dur(slept)+'</p><p class="quiet">'+fmt(n.onset)+'에 자서 '+fmt(n.wake)+'에 깼어.'+cmp+'</p>';
+  var label=dataSource()==='demo'?'예시 수면 기록':'어젯밤 수면 기록';
+  return '<p class="head">'+label+(slept==null?'':' '+dur(slept))+'</p><p class="quiet">기록상 '+fmt(n.onset)+'에 잠들고 '+fmt(n.wake)+'에 깼어요.'+cmp+'</p>';
 }
 
 /* ================= evidence-based weekly experiment ================= */
@@ -221,7 +246,7 @@ var RULES=[
    data:function(m){return '지난 '+m.n+'밤 동안 일어난 시각이 '+fmt(m.wakeMin)+'부터 '+fmt(m.wakeMax)+'까지 '+dur(m.wakeRange)+' 벌어졌어.'},
    why:'일어나는 시각을 먼저 고정하는 건 불면 행동치료(CBT-I)의 기본 단계야. 대학생 61명을 30일 동안 본 연구에선 잠자는 시간이 들쭉날쭉할수록 학점이 낮은 경향이 있었어. 관련이 있다는 거지, 원인이라는 뜻은 아니야.',
    refs:['Edinger 외 (2021) J Clin Sleep Med 17(2):255~262','Phillips 외 (2017) Sci Rep 7:3216','National Sleep Foundation 합의문 (2023) Sleep Health 9(6)']},
-  {id:'awake',metric:'waso',label:'밤중에 깬 시간',fmtv:function(v){return Math.round(v)+'분'},test:function(m,c){return (m.waso!=null&&m.waso>=30)||c.sosWorry>=2},
+  {id:'awake',metric:'waso',label:'밤중에 깬 시간',fmtv:function(v){return Math.round(v)+'분'},test:function(m){return m.waso!=null&&m.waso>=30},
    title:'꽤 오래 말똥하면 잠깐 일어나기',how:'시계는 보지 마. 한참 지났다 싶으면 침대에서 나와 어둑한 데서 쉬다가, 졸릴 때 다시 누워.',
    data:function(m){return '지난 '+m.n+'밤 동안 밤중에 평균 '+Math.round(m.waso)+'분 깨 있었어.'},
    why:'침대를 "잠 안 와서 괴로운 곳"이 아니라 "자는 곳"으로 다시 묶는 방법이야(자극 조절). 미국수면의학회 지침이 권하는 방법 가운데 하나고, 보통 20분 정도를 기준으로 안내해.',
@@ -231,14 +256,9 @@ var RULES=[
    data:function(m){return '지난 '+m.n+'밤 중 '+m.late+'밤은 평소보다 1시간 넘게 늦게 잤어.'},
    why:'딱히 할 일이 없는데도 자는 걸 미루는 걸 "취침 미루기"라고 불러. 177명을 조사한 연구에서 취침 미루기가 수면 부족과 이어져 있었어.',
    refs:['Kroese 외 (2014) Front Psychol 5:611','Chung·An·Suh (2020) Sleep 43(4)']},
-  {id:'list',metric:'worry',label:'"생각이 너무 많아"를 고른 밤',fmtv:function(v){return v+'밤'},test:function(m,c){return c.sosWorry>=2||c.anxious>=3},
-   title:'자기 전 5분, 내일 할 일 적기',how:'내일 할 일을 생각나는 대로 적고 덮어. 적은 건 내일의 몫이야.',
-   data:function(m,c){return '지난 7일 동안 밤에 "생각이 너무 많아"를 '+c.sosWorry+'번 골랐어.'},
-   why:'자기 전에 할 일 목록을 5분 쓴 사람들이, 끝낸 일을 쓴 사람들보다 빨리 잠들었다는 실험이 있어(평균 약 16분 대 25분, 57명, 수면다원검사).',
-   refs:['Scullin 외 (2018) J Exp Psychol Gen 147(1):139~146']}
 ];
 function ruleById(id){for(var i=0;i<RULES.length;i++)if(RULES[i].id===id)return RULES[i];return null}
-function candidates(){var m=metrics(lastDays(todayKey(),7).map(function(x){return x.n})),c=context();if(m.n<5)return {m:m,list:[]};return {m:m,c:c,list:RULES.filter(function(r){return r.test(m,c)})}}
+function candidates(){var m=metrics(lastDays(todayKey(),7).map(function(x){return x.n}));return {m:m,list:m.n<5?[]:RULES.filter(function(r){return r.test(m)})}}
 var memoIdx=0;
 
 /* ================= palette & light ================= */
@@ -465,7 +485,7 @@ function expLine(){if(!store.exp)return '';var r=ruleById(store.exp.id);if(!r)re
   return day>7?'<p class="quiet">일주일이 지났어. 메모에서 결과를 볼 수 있어.</p>':'<p class="quiet">이번 주에 해 보는 것: '+r.title+', '+day+'일째</p>'}
 function render(){
   var r=rec();
-  if(tod==='night'){lampPulse=true;set('<p class="head">잠이 안 오면 램프를 눌러.</p><p class="quiet">밤에는 알림을 보내지 않아.</p>');return}
+  if(tod==='night'){lampPulse=true;set('<p class="head">잠이 안 오면 램프를 눌러.</p>');return}
   lampPulse=false;
   if(r&&r.mood){doneView();return}
   var worry=store.worry&&store.worry.text?'<p class="quiet">밤에 적어 둔 것: “'+esc(store.worry.text)+'”</p>':'';
@@ -514,10 +534,8 @@ function openWeek(){
   pts.forEach(function(p,i){var cx2=Math.round((i+.5)*96/7);if(!p){x.fillStyle='#4d5290';[[0,-1],[-1,0],[1,0],[0,1]].forEach(function(o){x.fillRect(cx2+o[0],36+o[1],1,1)});return}
     x.fillStyle='#f2c46d';[[0,-1],[-1,0],[1,0],[0,1]].forEach(function(o){x.fillRect(p[0]+o[0],p[1]+o[1],1,1)});x.fillStyle='#fff4d2';x.fillRect(p[0],p[1],1,1)});
   document.getElementById('weekDays').innerHTML=cal.map(function(c2){return '<span>'+WD[addDays(new Date(c2.key+'T00:00:00'),-1).getDay()]+'</span>'}).join('');
-  var s='<p class="head" style="margin-top:8px">이번 주 잠든 시각</p><p class="quiet">위로 갈수록 늦게 잔 밤, 빈 점은 기록 없는 밤.</p>';
+  var s='<p class="head" style="margin-top:8px">이번 주 잠든 시각</p>';
   if(vals.length){var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);s+='<p>제일 이른 밤 '+fmt(mn)+', 제일 늦은 밤 '+fmt(mx)+'. '+dur(mx-mn)+' 차이가 났어.</p>'}else s+='<p>이번 주엔 시계가 잰 밤이 없어.</p>';
-  if(clipped)s+='<p class="quiet">10:00 PM보다 이르거나 4:00 AM보다 늦은 밤은 맨 끝에 붙여 그렸어.</p>';
-  s+='<p class="quiet">'+(store.source==='file'?'삼성 헬스 파일 기록이야.':'지금은 예시 데이터야.')+'</p>';
   document.getElementById('weekText').innerHTML=s;openOv('ovWeek');
 }
 
@@ -528,7 +546,7 @@ function openMemo(){
   if(store.exp){
     var r=ruleById(store.exp.id),day=daysBetween(store.exp.start,todayKey())+1;
     if(day<=7&&!store.exp.demoDone){
-      body.innerHTML='<p class="head">'+r.title+'</p><p>'+r.how+'</p><p class="quiet">'+day+'일째. 7일이 지나면 시작 전 일주일과 비교해서 알려 줄게.</p>'+evidenceHtml(r)+
+      body.innerHTML='<p class="head">'+r.title+'</p><p>'+r.how+'</p><p class="quiet">'+day+'일째</p>'+evidenceHtml(r)+
         '<div class="links"><button class="link" id="expStop">그만할래</button><button class="link" id="expDemo">시연: 7일 뒤 결과 보기</button></div>';
       document.getElementById('expStop').addEventListener('click',function(){store.exp=null;save();openMemo();render()});
       document.getElementById('expDemo').addEventListener('click',function(){store.exp.demoDone=true;save();openMemo()});
@@ -553,7 +571,7 @@ function resultHtml(r){
   var before=store.exp.base,after,nAfter;
   if(store.exp.demoDone){after=r.id==='wake'?70:r.id==='awake'?18:r.id==='late'?1:0;nAfter=7}
   else{var m=metrics(lastDays(todayKey(),7).map(function(x){return x.n}));nAfter=m.n;after=m.n>=5?metricValue(r,m,context()):null}
-  var head=store.exp.demoDone?'<p class="quiet">시연용 가상 데이터로 보여주는 결과야.</p>':'';
+  var head='';
   if(after==null||before==null)return head+'<p class="head">판단하기엔 기록이 모자라.</p><p>지난 일주일 시계 기록이 '+nAfter+'밤뿐이야.</p>';
   var cnt=r.metric==='late'||r.metric==='worry',diff=before-after,better=cnt?diff>=1:(diff>=30||diff>=before*0.2),worse=!better&&(cnt?after-before>=1:after-before>=30);
   var line=r.label+'<br>'+r.fmtv(before)+'에서 '+r.fmtv(after)+'로';
@@ -615,20 +633,22 @@ function drawGlow(now){
 
 var wipeArmed=false;
 function openData(){
-  document.getElementById('dataState').textContent=store.source==='file'?('삼성 헬스 파일에서 가져온 밤 '+nights().length+'개를 쓰는 중이야.'):'지금은 예시 데이터로 보여주는 중이야.';
+  var ds=dataSource();
+  document.getElementById('dataState').textContent=ds==='file'?('가져온 밤 '+nights().length+'개'):ds==='demo'?'예시 데이터로 보는 중':'';
+  document.getElementById('useDemo').textContent=store.demo?'예시 데이터 끄기':'예시 데이터로 보기';
   document.getElementById('guideToggle').textContent=store.guide?'방 안내 글씨 끄기':'방 안내 글씨 켜기';
   wipeArmed=false;document.getElementById('wipe').textContent='내 기록 지우기';openOv('ovData');
 }
-document.getElementById('useDemo').addEventListener('click',function(){store.nights=null;store.source='demo';save();openData();render()});
+document.getElementById('useDemo').addEventListener('click',function(){store.demo=!store.demo;save();openData();render()});
 document.getElementById('guideToggle').addEventListener('click',function(){store.guide=!store.guide;save();renderTags();openData();render()});
 document.getElementById('wipe').addEventListener('click',function(){
   if(!wipeArmed){wipeArmed=true;this.textContent='한 번 더 누르면 기분·감정·걱정·실험 기록을 지워';return}
-  store.records={};store.worry=null;store.nights=null;store.source='demo';store.exp=null;store.sosWorry=[];save();wipeArmed=false;this.textContent='지웠어';refreshScene(false);render()});
+  store.records={};store.worry=null;store.nights=null;store.source='none';store.demo=false;store.exp=null;store.sosWorry=[];save();wipeArmed=false;this.textContent='지웠어';refreshScene(false);render()});
 document.getElementById('csvIn').addEventListener('change',function(e){
   var f=e.target.files&&e.target.files[0],st=document.getElementById('dataState');if(!f)return;
   var rd=new FileReader();rd.onerror=function(){st.textContent='파일을 읽지 못했어. 다시 골라 줘.'};
   rd.onload=function(){var res=parseSamsung(String(rd.result));if(!res.length){st.textContent='이 파일에선 잠든 시각과 깬 시각을 못 찾았어. 이름에 sleep이 들어간 CSV인지 확인해 줘.';return}
-    store.nights=res.slice(-30);store.source='file';save();st.textContent='밤 '+res.length+'개를 찾았어. 마지막 기록은 '+md(res[res.length-1].date)+'이야.';render()};
+    store.nights=res.slice(-30);store.source='file';store.demo=false;save();st.textContent='밤 '+res.length+'개를 찾았어. 마지막 기록은 '+md(res[res.length-1].date)+'이야.';render()};
   rd.readAsText(f);
 });
 /* Samsung Health export (meaning of UTC vs local must be checked against a real file) */
@@ -658,12 +678,12 @@ function parseSamsung(text){
 function applyTheme(){app.style.backgroundColor=LIGHT[tod].app;app.classList.toggle('night',tod==='night')}
 document.getElementById('hWindow').addEventListener('click',openWeek);
 document.getElementById('hMemo').addEventListener('click',openMemo);
-document.getElementById('hShelf').addEventListener('click',function(){document.getElementById('page').classList.remove('on');document.getElementById('booksHint').textContent='책을 하나 꺼내 봐.';Array.prototype.forEach.call(document.querySelectorAll('.spine'),function(s){s.setAttribute('aria-pressed','false')});openOv('ovBooks')});
+document.getElementById('hShelf').addEventListener('click',function(){document.getElementById('page').classList.remove('on');Array.prototype.forEach.call(document.querySelectorAll('.spine'),function(s){s.setAttribute('aria-pressed','false')});openOv('ovBooks')});
 document.getElementById('hLamp').addEventListener('click',openSos);
 document.getElementById('hPhone').addEventListener('click',openData);
-document.getElementById('hBed').addEventListener('click',function(){set(lastNightHtml()+'<p class="quiet">'+(store.source==='file'?'삼성 헬스 파일 기록이야.':'지금은 예시 데이터야.')+'</p><div class="links"><button class="link" id="backTalk">알겠어</button></div>','#backTalk');document.getElementById('backTalk').addEventListener('click',render)});
+document.getElementById('hBed').addEventListener('click',function(){set(lastNightHtml()+'<div class="links"><button class="link" id="backTalk">알겠어</button></div>','#backTalk');document.getElementById('backTalk').addEventListener('click',render)});
 document.getElementById('hClock').addEventListener('click',function(){var nx=ORDER[(ORDER.indexOf(tod)+1)%4];demoTod=nx;tod=nx;applyTheme();rebake(nx,true);render();
-  var p=document.createElement('p');p.className='quiet';p.textContent='시연용으로 '+{morning:'아침',day:'낮',evening:'저녁',night:'밤'}[nx]+'으로 바꿨어.';talk.appendChild(p)});
+});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&!demoTod){var t=autoTod();if(t!==tod){tod=t;applyTheme();rebake(t,true)}if(!opened)render()}});
 
 if(qs.get('rec')){store.records[todayKey()]={mood:qs.get('rec')}}
